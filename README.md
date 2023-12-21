@@ -13,13 +13,21 @@
 ## Local Setup
 
 ### Build Docker Images
-In each directory build the docker images.
+From the top of this repo, build the docker images for server and client.
 
 ```bash
 docker build -t grpc-server -f server/Dockerfile .
 ```
 ```bash
 docker build -t grpc-client -f client/Dockerfile .
+```
+### Run containers
+Run the server container first, and then run the client container. The client container needs to be run with the `--network="host"` flag to allow it to connect to the server container.
+``` bash
+docker run -p 50051:50051 grpc-server
+```    
+``` bash
+docker run --network="host" grpc-client
 ```
 
 ...
