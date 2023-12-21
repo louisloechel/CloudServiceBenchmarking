@@ -23,20 +23,17 @@ go build
 From the top of this repo, build the docker images for server and client.
 
 ```bash
-docker build -t grpc-server -f server/Dockerfile .
-```
-```bash
-docker build -t grpc-client -f client/Dockerfile .
+docker-compose build
 ```
 ### Run containers
-Run the server container first, and then run the client container. The client container needs to be run with the `--network="host"` flag to allow it to connect to the server container.
+Runs the server container first, and then the client container. The client container needs to be run with the `--network="host"` flag to allow it to connect to the server container.
 ``` bash
-docker run -p 50051:50051 grpc-server
-```    
-``` bash
-docker run --network="host" grpc-client
+docker-compose up
 ```
-
+### Bring down containers
+```bash
+docker-compose down
+```
 ...
 
 ## GCP Setup
