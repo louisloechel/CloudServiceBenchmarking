@@ -11,6 +11,13 @@
 - [ ] Write report
 
 ## Local Setup
+### Compile Locally
+From the ```/server``` directory of this repo, compile the server binary.
+```bash
+go build
+```
+
+
 
 ### Build Docker Images
 From the top of this repo, build the docker images for server and client.
