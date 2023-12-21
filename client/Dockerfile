@@ -10,15 +10,14 @@ COPY go.mod go.sum ./
 # Download dependencies
 RUN go mod download
 
-# Copy the protobuf generated files and server code to the container's workspace
+# Copy the protobuf generated files and client code to the container's workspace
 COPY pb/ pb/
-COPY server/ .
+COPY client/ .
 
 # Build the application
-RUN go build -o main ./main.go
+RUN go build -o client ./main.go
 
-# Expose the gRPC port
-# EXPOSE 50051
+# No need to expose a port for the client
 
 # Run the client/main when the container starts
-CMD ["./main"]
+CMD ["./client"]

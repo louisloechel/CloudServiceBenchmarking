@@ -15,10 +15,10 @@ COPY pb/ pb/
 COPY server/ .
 
 # Build the application
-RUN go build -o main ./main.go
+RUN go build -o server ./main.go
 
 # Expose the gRPC port
 EXPOSE 50051
 
 # Run the server/main when the container starts
-CMD ["./main"]
+CMD ["./server"]
