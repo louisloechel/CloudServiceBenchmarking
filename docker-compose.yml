@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  grpc-server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - "50051:50051"
+
+  grpc-client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    depends_on:
+      - grpc-server
+    network_mode: "host"
