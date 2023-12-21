@@ -7,6 +7,7 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	pb "github.com/louisloechel/cloudservicebenchmarking/pb"
+	otelgrpc "go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 )
 
@@ -39,11 +40,11 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 
-	// Create a server option with the interceptor
+	// Create a server option with the interceptors
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			loggingInterceptor, // Your custom interceptor
-			// ... add more interceptors if needed ...
+			loggingInterceptor,                // Your custom logging interceptor
+			otelgrpc.UnaryServerInterceptor(), // OpenTelemetry interceptor
 		)),
 	}
 
