@@ -1,6 +1,4 @@
 # Use the official Go image as a parent image
-FROM golang:1.18
-# Use the official Go image as a parent image
 FROM golang:1.19
 
 # Set the working directory inside the container
@@ -20,7 +18,7 @@ COPY server/ .
 RUN go build -o main ./main.go
 
 # Expose the gRPC port
-EXPOSE 50051
+# EXPOSE 50051
 
 # Run the client/main when the container starts
 CMD ["./main"]
