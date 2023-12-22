@@ -6,8 +6,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
 	pb "github.com/louisloechel/cloudservicebenchmarking/pb"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -17,7 +19,16 @@ const (
 
 func main() {
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(
+		address,
+		// grpc.WithInsecure(),
+		// grpc.WithBlock(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithChainUnaryInterceptor(
+			timeout.UnaryClientInterceptor(500*time.Millisecond),
+		),
+	)
+
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
