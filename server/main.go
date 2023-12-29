@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"net"
-	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	pb "github.com/louisloechel/cloudservicebenchmarking/pb"
@@ -30,8 +29,11 @@ func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloRe
 // loggingInterceptor is a simple interceptor that logs each request.
 func loggingInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	log.Printf("Request - Method:%s; %v", info.FullMethod, req)
-	log.Printf("Sleeping for 5 seconds")
-	time.Sleep(5 * time.Second) // Sleep for 5 seconds
+
+	// Uncomment to activate client side timeout.UnaryClientInterceptor(500*time.Millisecond)
+	// log.Printf("Sleeping for 5 seconds")
+	// time.Sleep(5 * time.Second) // Sleep for 5 seconds
+
 	resp, err := handler(ctx, req)
 	log.Printf("Response - Method:%s; %v", info.FullMethod, resp)
 	return resp, err
