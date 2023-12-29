@@ -37,4 +37,7 @@ docker-compose down
 ...
 
 ## GCP Setup
-_coming soon_
+### Terraform
+```cd tf``` into the terraform directory and run ```terraform init``` to initialize the terraform project. Then run ```terraform apply``` to create the GCP resources.
+
+Once the finished, you can run ```terraform destroy``` to delete them.
