@@ -15,8 +15,8 @@ import (
 const (
 	address            = "localhost:50051"
 	defaultName        = "world"
-	totalRequests      = 1000 // Total number of requests to send
-	concurrentRequests = 5    // Number of concurrent requests
+	totalRequests      = 100000 // Total number of requests to send
+	concurrentRequests = 1      // Number of concurrent requests
 )
 
 type Metric struct {
