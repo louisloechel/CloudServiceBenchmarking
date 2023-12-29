@@ -5,7 +5,7 @@
 - [X] Set-up simple client-server architecture (containerized)
 - [ ] add variety of interceptors
 - [ ] create load generator/benchmarking tool
-- [ ] GCP setup
+- [X] GCP setup
 - [ ] run Benchmarking Experiments
 - [ ] Analyze results
 - [ ] Write report
