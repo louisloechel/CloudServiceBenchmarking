@@ -93,7 +93,7 @@ func main() {
 	log.Printf("Min latency: %v", minDuration)
 
 	// Create results.csv
-	file, err := os.Create("results.csv")
+	file, err := os.Create("/results/results.csv")
 	if err != nil {
 		log.Fatalf("Could not create results.csv: %v", err)
 	}
