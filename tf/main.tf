@@ -26,14 +26,26 @@ resource "google_compute_instance" "vm_instance" {
   metadata_startup_script = <<-EOT
     #!/bin/bash
     # Update and Install Docker
-    apt-get update
-    apt-get install -y docker.io git
+    sudo apt-get update
+    sudo apt-get install -y docker.io git
 
-    # Install Docker Compose
-    curl -L "https://github.com/docker/compose/releases/download/v2.0.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
+    # Add Docker's official GPG key:
+    sudo apt-get update -y
+    sudo apt-get install ca-certificates curl gnupg -y
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-    # Clone your repository
+    # Add the repository to Apt sources:
+    echo \
+      "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+      "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    sudo apt-get update -y
+
+    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
+
+    # Clone the repository
     git clone github.com/louisloechel/CloudServiceBenchmarking /home/ubuntu/CloudServiceBenchmarking
 
     # Assuming docker-compose.yml is at the root of your repository
@@ -41,8 +53,8 @@ resource "google_compute_instance" "vm_instance" {
     cd /home/ubuntu/CloudServiceBenchmarking
 
     # Build and run docker-compose
-    docker-compose build
-    docker-compose up -d
+    docker compose build
+    docker compose up -d
   EOT
 
   service_account {
