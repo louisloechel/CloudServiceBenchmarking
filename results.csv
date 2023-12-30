@@ -1,0 +1,2 @@
+Total Requests,Concurrent Requests,Average Latency,Max Latency,Min Latency
+100000,1,289.039µs,56.596ms,50.25µs
