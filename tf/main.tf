@@ -24,15 +24,26 @@ resource "google_compute_instance" "vm_instance" {
   }
 
   metadata_startup_script = <<-EOT
-    #! /bin/bash
-    sudo apt-get update
-    sudo apt-get install -y docker.io
-    for image in ${join(" ", var.docker_images)}
-    do
-      sudo docker run -d $image
-    done
-  EOT
+    #!/bin/bash
+    # Update and Install Docker
+    apt-get update
+    apt-get install -y docker.io git
 
+    # Install Docker Compose
+    curl -L "https://github.com/docker/compose/releases/download/v2.0.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+
+    # Clone your repository
+    git clone github.com/louisloechel/CloudServiceBenchmarking /home/ubuntu/CloudServiceBenchmarking
+
+    # Assuming docker-compose.yml is at the root of your repository
+    # Navigate to the repository directory
+    cd /home/ubuntu/CloudServiceBenchmarking
+
+    # Build and run docker-compose
+    docker-compose build
+    docker-compose up -d
+  EOT
 
   service_account {
     scopes = ["cloud-platform"]

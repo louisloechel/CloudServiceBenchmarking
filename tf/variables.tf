@@ -23,3 +23,8 @@ variable "docker_images" {
   type        = list(string)
   default     = ["grpc-server", "grpc-client"]
 }
+
+variable "docker_compose_path" {
+  description = "Path to the docker-compose.yml file on local machine."
+  default     = "../docker-compose.yml"
+}
