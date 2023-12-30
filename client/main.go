@@ -19,7 +19,7 @@ const (
 	address            = "localhost:50051"
 	defaultName        = "world"
 	totalRequests      = 100000 // Total number of requests to send
-	concurrentRequests = 1      // Number of concurrent requests
+	concurrentRequests = 10     // Number of concurrent requests
 )
 
 type Metric struct {
