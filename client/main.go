@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
+	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -88,4 +91,33 @@ func main() {
 	log.Printf("Average latency: %v", avgDuration)
 	log.Printf("Max latency: %v", maxDuration)
 	log.Printf("Min latency: %v", minDuration)
+
+	// Create results.csv
+	file, err := os.Create("results.csv")
+	if err != nil {
+		log.Fatalf("Could not create results.csv: %v", err)
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Write header
+	err = writer.Write([]string{"Total Requests", "Concurrent Requests", "Average Latency", "Max Latency", "Min Latency"})
+	if err != nil {
+		log.Fatalf("Could not write to results.csv: %v", err)
+	}
+
+	// Write data
+	err = writer.Write([]string{
+		fmt.Sprintf("%d", totalRequests),
+		fmt.Sprintf("%d", concurrentRequests),
+		fmt.Sprintf("%v", avgDuration),
+		fmt.Sprintf("%v", maxDuration),
+		fmt.Sprintf("%v", minDuration),
+	})
+	if err != nil {
+		log.Fatalf("Could not write to results.csv: %v", err)
+	}
+
 }
