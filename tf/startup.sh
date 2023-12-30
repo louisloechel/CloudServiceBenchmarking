@@ -14,17 +14,16 @@ sudo apt-get update -y
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin -y
 
 # Clone the repository
-sudo git clone github.com/louisloechel/CloudServiceBenchmarking /home/ubuntu/CloudServiceBenchmarking
+sudo git clone https://github.com/louisloechel/CloudServiceBenchmarking /home/ubuntu/CloudServiceBenchmarking
 
 # Navigate to the repository directory
 cd /home/ubuntu/CloudServiceBenchmarking
 
 # Add user to docker group
-sudo usermod -aG docker username
+sudo usermod -aG docker louisloechel
 
 # Start docker
 sudo systemctl start docker
-
 
 # Build and run docker-compose
 docker compose build
