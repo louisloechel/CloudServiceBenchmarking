@@ -27,8 +27,75 @@ type Metric struct {
 	Duration time.Duration
 }
 
+func initialiseResultsFile() {
+	// Open results.csv for appending, create it if it doesn't exist
+	file, err := os.OpenFile("/results/results.csv", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatalf("Could not open results.csv: %v", err)
+	}
+	defer file.Close()
+
+	// Check if the file is empty
+	info, err := file.Stat()
+	if err != nil {
+		log.Fatalf("Could not get file info: %v", err)
+	}
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+
+	// Write header if the file is empty
+	if info.Size() == 0 {
+		err = writer.Write([]string{"Timestamp", "Total Requests", "Concurrent Requests", "Average Latency", "Max Latency", "Min Latency", "Avg. Throughput", "Time Elapsed"})
+		if err != nil {
+			log.Fatalf("Could not write to results.csv: %v", err)
+		}
+	}
+
+	// Write data
+	err = writer.Write([]string{
+		fmt.Sprintf("%v", time.Now()),
+		fmt.Sprintf("%d", 0),
+		fmt.Sprintf("%d", 0),
+		fmt.Sprintf("%v", 0),
+		fmt.Sprintf("%v", 0),
+		fmt.Sprintf("%v", 0),
+		fmt.Sprintf("%v", 0),
+		fmt.Sprintf("%v", 0),
+	})
+	if err != nil {
+		log.Fatalf("Could not write to results.csv: %v", err)
+	}
+}
+
+func warmUp(c pb.GreeterClient, concurrentRequests int) {
+	var wg sync.WaitGroup
+	metricsChan := make(chan Metric, totalRequests)
+	semaphore := make(chan struct{}, concurrentRequests)
+
+	for i := 0; i < totalRequests; i++ {
+		wg.Add(1)
+		semaphore <- struct{}{} // Blocks if concurrentRequests are already running
+		go func() {
+			defer wg.Done()
+			defer func() { <-semaphore }() // Release the semaphore
+
+			start := time.Now()
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			defer cancel()
+			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: defaultName})
+			if err != nil {
+				log.Printf("Could not greet: %v", err)
+				return
+			}
+			metricsChan <- Metric{Duration: time.Since(start)}
+		}()
+	}
+}
+
 func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
-	log.Printf("Running benchmark with %d concurrent requests", concurrentRequests)
+	log.Printf("\nRunning benchmark with %d concurrent requests", concurrentRequests)
+	runStart := time.Now()
 
 	var wg sync.WaitGroup
 	metricsChan := make(chan Metric, totalRequests)
@@ -80,6 +147,8 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 	log.Printf("Average latency: %v", avgDuration)
 	log.Printf("Max latency: %v", maxDuration)
 	log.Printf("Min latency: %v", minDuration)
+	log.Printf("Avg Throughput: %f req/s", float64(totalRequests)/avgDuration.Seconds())
+	log.Printf("Time elapsed: %v", totalDuration)
 
 	// Open results.csv for appending, create it if it doesn't exist
 	file, err := os.OpenFile("/results/results.csv", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -99,7 +168,7 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 
 	// Write header if the file is empty
 	if info.Size() == 0 {
-		err = writer.Write([]string{"Total Requests", "Concurrent Requests", "Average Latency", "Max Latency", "Min Latency"})
+		err = writer.Write([]string{"Timestamp", "Total Requests", "Concurrent Requests", "Average Latency", "Max Latency", "Min Latency", "Avg. Throughput", "Time Elapsed"})
 		if err != nil {
 			log.Fatalf("Could not write to results.csv: %v", err)
 		}
@@ -107,11 +176,14 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 
 	// Write data
 	err = writer.Write([]string{
+		fmt.Sprintf("%v", time.Now()),
 		fmt.Sprintf("%d", totalRequests),
 		fmt.Sprintf("%d", concurrentRequests),
 		fmt.Sprintf("%v", avgDuration),
 		fmt.Sprintf("%v", maxDuration),
 		fmt.Sprintf("%v", minDuration),
+		fmt.Sprintf("%v", float64(totalRequests)/avgDuration.Seconds()),
+		fmt.Sprintf("%v", time.Since(runStart)),
 	})
 	if err != nil {
 		log.Fatalf("Could not write to results.csv: %v", err)
@@ -133,6 +205,15 @@ func main() {
 
 	c := pb.NewGreeterClient(conn)
 
+	// Warm up the server
+	log.Printf("Warming up the server. Sending %d requests", totalRequests)
+	warmUp(c, maxConcurrentRequests)
+	log.Printf("Warm up finished. Benchmarking...\n------------------")
+
+	// initialise results.csv with start time and zeroes
+	initialiseResultsFile()
+
+	// Run the benchmark
 	for concurrentRequests := minConcurrentRequests; concurrentRequests <= maxConcurrentRequests; concurrentRequests++ {
 		runBenchmark(c, concurrentRequests)
 	}
