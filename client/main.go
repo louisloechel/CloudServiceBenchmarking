@@ -19,7 +19,7 @@ const (
 	address               = "localhost:50051"
 	defaultName           = "world"
 	totalRequests         = 100000 // Total number of requests to send
-	maxConcurrentRequests = 10     // Maximum number of concurrent requests
+	maxConcurrentRequests = 20     // Maximum number of concurrent requests
 	minConcurrentRequests = 1      // Minimum number of concurrent requests
 )
 
@@ -190,6 +190,15 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 	}
 }
 
+func experimentDone() {
+	// Create experiment_done.txt
+	file, err := os.Create("/results/experiment_done.txt")
+	if err != nil {
+		log.Fatalf("Could not create experiment_done.txt: %v", err)
+	}
+	defer file.Close()
+}
+
 func main() {
 	conn, err := grpc.Dial(
 		address,
@@ -217,4 +226,7 @@ func main() {
 	for concurrentRequests := minConcurrentRequests; concurrentRequests <= maxConcurrentRequests; concurrentRequests++ {
 		runBenchmark(c, concurrentRequests)
 	}
+
+	// create indicator that benchmark is finished: experiment_done.txt
+	experimentDone()
 }
