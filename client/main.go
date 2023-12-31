@@ -18,9 +18,9 @@ import (
 const (
 	address               = "localhost:50051"
 	defaultName           = "world"
-	totalRequests         = 100000 // Total number of requests to send
-	maxConcurrentRequests = 20     // Maximum number of concurrent requests
-	minConcurrentRequests = 1      // Minimum number of concurrent requests
+	totalRequests         = 1000 // Total number of requests to send
+	maxConcurrentRequests = 5    // Maximum number of concurrent requests
+	minConcurrentRequests = 1    // Minimum number of concurrent requests
 )
 
 type Metric struct {
