@@ -2,3 +2,5 @@
 .DS_Store
 env/
 *.tfstate
+experiment_done.txt
+results.csv
