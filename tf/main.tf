@@ -30,6 +30,10 @@ resource "google_compute_instance" "vm_instance" {
   }
 
   tags = ["http-server", "https-server"]
+
+  metadata = {
+    ssh-keys = "user_name:${file("../env/my-ssh-key.pub")}"
+  }
 }
 
 resource "google_compute_firewall" "firewall" {
@@ -42,4 +46,27 @@ resource "google_compute_firewall" "firewall" {
   }
 
   source_ranges = ["0.0.0.0/0"]
+}
+
+resource "null_resource" "benchmark_waiter" {
+  triggers = {
+    always_run = "${timestamp()}"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "while [ ! -f /home/ubuntu/experiment_done.txt ]; do sleep 30; done",
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "user_name"
+      private_key = file(var.private_key_path)
+      host        = google_compute_instance.vm_instance.network_interface[0].access_config[0].nat_ip
+    }
+  }
+
+  provisioner "local-exec" {
+    command = "echo 'Benchmarking completed. Downloading results.csv.' && scp -i ../env/my_private_key.pem user_name@${google_compute_instance.vm_instance.network_interface[0].access_config[0].nat_ip}:/home/ubuntu/CloudServiceBenchmarking/results.csv ./results.csv"
+  }
 }

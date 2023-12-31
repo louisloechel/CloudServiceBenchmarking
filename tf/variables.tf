@@ -28,3 +28,14 @@ variable "docker_compose_path" {
   description = "Path to the docker-compose.yml file on local machine."
   default     = "../docker-compose.yml"
 }
+
+variable "private_key_path" {
+  description = "Path to the private key file on local machine."
+  default     = "../env/my-ssh-key"
+}
+
+variable "public_key_path" {
+  description = "Path to the public key file on local machine."
+  default     = "../env/my-ssh-key.pub"
+
+}
