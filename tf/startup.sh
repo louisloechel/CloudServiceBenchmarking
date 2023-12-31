@@ -22,9 +22,14 @@ cd /home/ubuntu/CloudServiceBenchmarking
 # Add user to docker group
 sudo usermod -aG docker louisloechel
 
+# Start a new subshell with the new group
+newgrp docker << EOF
+
 # Start docker
 sudo systemctl start docker
 
 # Build and run docker-compose
 docker compose build
 docker compose up -d
+
+EOF
