@@ -18,9 +18,9 @@ import (
 const (
 	address               = "localhost:50051"
 	defaultName           = "world"
-	totalRequests         = 1000 // Total number of requests to send
-	maxConcurrentRequests = 5    // Maximum number of concurrent requests
-	minConcurrentRequests = 1    // Minimum number of concurrent requests
+	totalRequests         = 100000 // Total number of requests to send
+	maxConcurrentRequests = 100    // Maximum number of concurrent requests
+	minConcurrentRequests = 50     // Minimum number of concurrent requests
 )
 
 type Metric struct {
@@ -229,4 +229,5 @@ func main() {
 
 	// create indicator that benchmark is finished: experiment_done.txt
 	experimentDone()
+	log.Printf("Benchmark finished. Created experiment_done.txt")
 }

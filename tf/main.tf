@@ -55,7 +55,7 @@ resource "null_resource" "benchmark_waiter" {
 
   provisioner "remote-exec" {
     inline = [
-      "while [ ! -f /home/ubuntu/experiment_done.txt ]; do sleep 30; done",
+      "while [ ! -f /home/ubuntu/CloudServiceBenchmarking/experiment_done.txt ]; do sleep 10; done",
     ]
 
     connection {
@@ -67,6 +67,7 @@ resource "null_resource" "benchmark_waiter" {
   }
 
   provisioner "local-exec" {
-    command = "echo 'Benchmarking completed. Downloading results.csv.' && scp -i ../env/my_private_key.pem user_name@${google_compute_instance.vm_instance.network_interface[0].access_config[0].nat_ip}:/home/ubuntu/CloudServiceBenchmarking/results.csv ./results.csv"
+    // Caution: "StrictHostKeyChecking=no"" is less secure but should be fine in this use case.
+    command = "echo 'Benchmarking completed. Downloading results.csv.' && scp -o StrictHostKeyChecking=no -i ../env/my-ssh-key user_name@${google_compute_instance.vm_instance.network_interface[0].access_config[0].nat_ip}:/home/ubuntu/CloudServiceBenchmarking/results.csv ../results.csv"
   }
 }
