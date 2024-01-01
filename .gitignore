@@ -4,3 +4,9 @@ env/
 *.tfstate
 experiment_done.txt
 results.csv
+*.info
+*.tfstate
+*.backup
+*.backup
+*.tfstate
+tf/terraform.tfstate
