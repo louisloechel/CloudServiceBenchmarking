@@ -55,7 +55,7 @@ resource "null_resource" "benchmark_waiter" {
 
   provisioner "remote-exec" {
     inline = [
-      "while [ ! -f /home/ubuntu/CloudServiceBenchmarking/experiment_done.txt ]; do sleep 10; done",
+      "while [ ! -f /home/ubuntu/CloudServiceBenchmarking/experiment_done.txt ]; do echo 'Conducting Benchmark...'; sleep 10; done",
     ]
 
     connection {
