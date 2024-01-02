@@ -1,3 +1,8 @@
+/*
+DISCLAIMER: Parts of this code are referencing following sources:
+- https://github.com/grpc-ecosystem/go-grpc-middleware/tree/main/examples
+*/
+
 package main
 
 import (
@@ -13,14 +18,15 @@ import (
 	pb "github.com/louisloechel/cloudservicebenchmarking/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
+	grpcMetadata "google.golang.org/grpc/metadata"
 )
 
 const (
 	address               = "localhost:50051"
 	defaultName           = "world"
-	totalRequests         = 100000 // Total number of requests to send
-	maxConcurrentRequests = 100    // Maximum number of concurrent requests
-	minConcurrentRequests = 50     // Minimum number of concurrent requests
+	totalRequests         = 100 // Total number of requests to send
+	maxConcurrentRequests = 5   // Maximum number of concurrent requests
+	minConcurrentRequests = 1   // Minimum number of concurrent requests
 )
 
 type Metric struct {
@@ -108,8 +114,11 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release the semaphore
 
+			// Custom auth
+			md := grpcMetadata.Pairs("authorization", "bearer yolo")
+
 			start := time.Now()
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			ctx, cancel := context.WithTimeout(grpcMetadata.NewOutgoingContext(context.Background(), md), time.Second)
 			defer cancel()
 			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: defaultName})
 			if err != nil {
