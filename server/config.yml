@@ -1,0 +1,17 @@
+# This config file is used to configure the server and specify the use of gRPC-intercepors
+# Currently implemented interceptors are:
+# - Logging Interceptor: logs the request and response of each gRPC call
+# - Auth Interceptor: authenticates the user by checking the JWT token in the request metadata
+# - Prometheus Metrics Interceptor: measures the duration of each gRPC call and exports the metrics to Prometheus
+
+# Logging Interceptor
+logging:
+  enabled: true
+
+# Auth Interceptor
+auth:
+  enabled: false
+
+# Prometheus Metrics Interceptor
+metrics:
+  enabled: true

@@ -27,6 +27,7 @@ require (
 
 require (
 	github.com/go-kit/log v0.2.1
+	github.com/go-yaml/yaml v2.1.0+incompatible
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.0
 	github.com/prometheus/client_golang v1.18.0

@@ -14,6 +14,7 @@ import (
 
 	kitlog "github.com/go-kit/log"
 	"github.com/go-kit/log/level"
+	"github.com/go-yaml/yaml"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpcprom "github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
@@ -65,12 +66,20 @@ func interceptorLogger(l kitlog.Logger) logging.Logger {
 	})
 }
 
+// No-Op Interceptor is needed in case you want to chain interceptors but don't want to add any additional logic.
+// Fixes returning nil as an interceptor which causes the chain to break.
+func noOpInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+	// Just call the handler directly without any additional logic
+	return handler(ctx, req)
+}
+
 func main() {
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		stdlog.Fatalf("failed to listen: %v", err)
 	}
 
+	// Set up logging
 	logger := kitlog.NewLogfmtLogger(os.Stderr)
 	rpcLogger := kitlog.With(logger, "service", "gRPC/server", "component", component)
 	logTraceID := func(ctx context.Context) logging.Fields {
@@ -114,13 +123,70 @@ func main() {
 		return healthpb.Health_ServiceDesc.ServiceName != callMeta.Service
 	}
 
-	// --------------------------------------------
-	// Create a server option with the interceptors
+	/* ---------------------------------------------------------
+	| This is the core of the gRPC interceptor chain experiment |
+	-----------------------------------------------------------*/
+
+	type Config struct {
+		Logging struct {
+			Enabled bool `yaml:"enabled"`
+		} `yaml:"logging"`
+		Auth struct {
+			Enabled bool `yaml:"enabled"`
+		} `yaml:"auth"`
+		Metrics struct {
+			Enabled bool `yaml:"enabled"`
+		} `yaml:"metrics"`
+	}
+
+	// Load the config.yml file
+	configFile := "./config.yml"
+	configData, err := os.ReadFile(configFile)
+	if err != nil {
+		stdlog.Fatalf("failed to read config file: %v", err)
+	}
+	stdlog.Printf("Loaded config file: %v", configFile)
+	stdlog.Printf("Config data: %v", string(configData))
+
+	// Parse the YAML data into the Config struct
+	var config Config
+	err = yaml.Unmarshal(configData, &config)
+	if err != nil {
+		stdlog.Fatalf("failed to parse config file: %v", err)
+	}
+
+	// Apply the boolean values from the config
+	enableMetrics := config.Metrics.Enabled
+	enableLogging := config.Logging.Enabled
+	enableAuth := config.Auth.Enabled
+
+	stdlog.Printf("Metrics enabled: %v", enableMetrics)
+	stdlog.Printf("Logging enabled: %v", enableLogging)
+	stdlog.Printf("Auth enabled: %v", enableAuth)
+
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
-			srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext)),                // prometheus metrics interceptor
-			logging.UnaryServerInterceptor(interceptorLogger(rpcLogger), logging.WithFieldsFromContext(logTraceID)), // go-kit logging interceptor
-			selector.UnaryServerInterceptor(auth.UnaryServerInterceptor(authFn), selector.MatchFunc(allButHealthZ)), // auth interceptor
+			// Conditionally include the metrics interceptor
+			func() grpc.UnaryServerInterceptor {
+				if enableMetrics {
+					return srvMetrics.UnaryServerInterceptor(grpcprom.WithExemplarFromContext(exemplarFromContext))
+				}
+				return noOpInterceptor
+			}(),
+			// Conditionally include the logging interceptor
+			func() grpc.UnaryServerInterceptor {
+				if enableLogging {
+					return logging.UnaryServerInterceptor(interceptorLogger(rpcLogger), logging.WithFieldsFromContext(logTraceID))
+				}
+				return noOpInterceptor
+			}(),
+			// Conditionally include the auth interceptor
+			func() grpc.UnaryServerInterceptor {
+				if enableAuth {
+					return selector.UnaryServerInterceptor(auth.UnaryServerInterceptor(authFn), selector.MatchFunc(allButHealthZ))
+				}
+				return noOpInterceptor
+			}(),
 		)),
 	}
 
@@ -128,7 +194,6 @@ func main() {
 	pb.RegisterGreeterServer(s, &server{})
 	stdlog.Printf("Server listening at %v", lis.Addr())
 	if err := s.Serve(lis); err != nil {
-		// Print error message
 		stdlog.Fatalf("failed to serve: %v", err)
 	}
 }

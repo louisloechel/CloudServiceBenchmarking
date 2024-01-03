@@ -14,6 +14,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-yaml/yaml"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/timeout"
 	pb "github.com/louisloechel/cloudservicebenchmarking/pb"
 	"google.golang.org/grpc"
@@ -21,16 +22,46 @@ import (
 	grpcMetadata "google.golang.org/grpc/metadata"
 )
 
-const (
-	address               = "localhost:50051"
-	defaultName           = "world"
-	totalRequests         = 100 // Total number of requests to send
-	maxConcurrentRequests = 5   // Maximum number of concurrent requests
-	minConcurrentRequests = 1   // Minimum number of concurrent requests
-)
+// var (
+// 	address               = "localhost:50051"
+// 	defaultName           = "world"
+// 	totalRequests         = 100 // Total number of requests to send
+// 	maxConcurrentRequests = 5   // Maximum number of concurrent requests
+// 	minConcurrentRequests = 1   // Minimum number of concurrent requests
+// )
 
 type Metric struct {
 	Duration time.Duration
+}
+
+type Config struct {
+	Address               string `yaml:"server_address"`
+	DefaultName           string `yaml:"default_name"`
+	TotalRequests         int    `yaml:"total_requests"`
+	MaxConcurrentRequests int    `yaml:"max_concurrent_requests"`
+	MinConcurrentRequests int    `yaml:"min_concurrent_requests"`
+}
+
+func loadConfig() Config {
+	configFile := "./config.yml"
+	configData, err := os.ReadFile(configFile)
+	if err != nil {
+		log.Fatalf("failed to read config file: %v", err)
+	}
+	log.Printf("Loaded config file: %v", configFile)
+	log.Printf("Config data: %v", string(configData))
+
+	// Parse the YAML data into the Config struct
+	var config Config
+	err = yaml.Unmarshal(configData, &config)
+	if err != nil {
+		log.Fatalf("failed to parse config file: %v", err)
+	}
+
+	// print config
+	log.Printf("Config: %v", config)
+
+	return config
 }
 
 func initialiseResultsFile() {
@@ -74,12 +105,12 @@ func initialiseResultsFile() {
 	}
 }
 
-func warmUp(c pb.GreeterClient, concurrentRequests int) {
+func warmUp(c pb.GreeterClient, concurrentRequests int, config Config) {
 	var wg sync.WaitGroup
-	metricsChan := make(chan Metric, totalRequests)
+	metricsChan := make(chan Metric, config.TotalRequests)
 	semaphore := make(chan struct{}, concurrentRequests)
 
-	for i := 0; i < totalRequests; i++ {
+	for i := 0; i < config.TotalRequests; i++ {
 		wg.Add(1)
 		semaphore <- struct{}{} // Blocks if concurrentRequests are already running
 		go func() {
@@ -89,7 +120,7 @@ func warmUp(c pb.GreeterClient, concurrentRequests int) {
 			start := time.Now()
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			defer cancel()
-			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: defaultName})
+			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: config.DefaultName})
 			if err != nil {
 				log.Printf("Could not greet: %v", err)
 				return
@@ -99,15 +130,15 @@ func warmUp(c pb.GreeterClient, concurrentRequests int) {
 	}
 }
 
-func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
+func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 	log.Printf("\nRunning benchmark with %d concurrent requests", concurrentRequests)
 	runStart := time.Now()
 
 	var wg sync.WaitGroup
-	metricsChan := make(chan Metric, totalRequests)
+	metricsChan := make(chan Metric, config.TotalRequests)
 	semaphore := make(chan struct{}, concurrentRequests)
 
-	for i := 0; i < totalRequests; i++ {
+	for i := 0; i < config.TotalRequests; i++ {
 		wg.Add(1)
 		semaphore <- struct{}{} // Blocks if concurrentRequests are already running
 		go func() {
@@ -120,7 +151,7 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 			start := time.Now()
 			ctx, cancel := context.WithTimeout(grpcMetadata.NewOutgoingContext(context.Background(), md), time.Second)
 			defer cancel()
-			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: defaultName})
+			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: config.DefaultName})
 			if err != nil {
 				log.Printf("Could not greet: %v", err)
 				return
@@ -132,7 +163,8 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 	wg.Wait()
 	close(metricsChan)
 
-	// Calculate and print metrics
+	// Calculate and print metrics.
+	// todo: this calculates nonsense. Fix or delete
 	var totalDuration time.Duration
 	var maxDuration time.Duration
 	var minDuration = time.Duration(1<<63 - 1)
@@ -151,12 +183,12 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 
 	avgDuration := totalDuration / time.Duration(count)
 
-	log.Printf("Total requests: %d", totalRequests)
+	log.Printf("Total requests: %d", config.TotalRequests)
 	log.Printf("Concurrent requests: %d", concurrentRequests)
 	log.Printf("Average latency: %v", avgDuration)
 	log.Printf("Max latency: %v", maxDuration)
 	log.Printf("Min latency: %v", minDuration)
-	log.Printf("Avg Throughput: %f req/s", float64(totalRequests)/avgDuration.Seconds())
+	log.Printf("Avg Throughput: %f req/s", float64(config.TotalRequests)/avgDuration.Seconds())
 	log.Printf("Time elapsed: %v", totalDuration)
 
 	// Open results.csv for appending, create it if it doesn't exist
@@ -186,12 +218,12 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int) {
 	// Write data
 	err = writer.Write([]string{
 		fmt.Sprintf("%v", time.Now()),
-		fmt.Sprintf("%d", totalRequests),
+		fmt.Sprintf("%d", config.TotalRequests),
 		fmt.Sprintf("%d", concurrentRequests),
 		fmt.Sprintf("%v", avgDuration),
 		fmt.Sprintf("%v", maxDuration),
 		fmt.Sprintf("%v", minDuration),
-		fmt.Sprintf("%v", float64(totalRequests)/avgDuration.Seconds()),
+		fmt.Sprintf("%v", float64(config.TotalRequests)/avgDuration.Seconds()),
 		fmt.Sprintf("%v", time.Since(runStart)),
 	})
 	if err != nil {
@@ -209,8 +241,10 @@ func experimentDone() {
 }
 
 func main() {
+	config := loadConfig()
+
 	conn, err := grpc.Dial(
-		address,
+		config.Address,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
 			timeout.UnaryClientInterceptor(500*time.Millisecond),
@@ -224,16 +258,16 @@ func main() {
 	c := pb.NewGreeterClient(conn)
 
 	// Warm up the server
-	log.Printf("Warming up the server. Sending %d requests", totalRequests)
-	warmUp(c, maxConcurrentRequests)
+	log.Printf("Warming up the server. Sending %d requests", config.TotalRequests)
+	warmUp(c, config.MaxConcurrentRequests, config)
 	log.Printf("Warm up finished. Benchmarking...\n------------------")
 
 	// initialise results.csv with start time and zeroes
 	initialiseResultsFile()
 
 	// Run the benchmark
-	for concurrentRequests := minConcurrentRequests; concurrentRequests <= maxConcurrentRequests; concurrentRequests++ {
-		runBenchmark(c, concurrentRequests)
+	for concurrentRequests := config.MinConcurrentRequests; concurrentRequests <= config.MaxConcurrentRequests; concurrentRequests++ {
+		runBenchmark(c, concurrentRequests, config)
 	}
 
 	// create indicator that benchmark is finished: experiment_done.txt
