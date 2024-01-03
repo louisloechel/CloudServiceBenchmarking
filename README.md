@@ -4,11 +4,31 @@
 ## Rodamap
 - [X] Set-up simple client-server architecture (containerized)
 - [ ] add variety of interceptors
-- [ ] create load generator/benchmarking tool
+- [X] create load generator/benchmarking tool
 - [X] GCP setup
 - [ ] run Benchmarking Experiments
 - [ ] Analyze results
 - [ ] Write report
+
+## Benchmark Configuration
+### Server
+Specify which interceptor to include on the server side by toggling the respective boolean in the ```server/config.yml``` file (for full list, check out the file). 
+
+Example for the Prometheus Metrics Interceptor:
+```yml
+# Prometheus Metrics Interceptor
+metrics:
+  enabled: true
+```
+
+### Client
+Define the load pattern to generate in the ```client/config.yml``` file. In the example below, the client will generate a load of 100.000 requests over 100 iterations each, resulting in 10.000.000 throughout the whole experiment. With each iteration the number of concurrent (parallel) requests is increased.
+```yml
+total_requests: 100000
+max_concurrent_requests: 100
+min_concurrent_requests: 1
+```
+
 
 ## Local Setup
 ### Compile Locally
