@@ -40,6 +40,7 @@ type Config struct {
 	TotalRequests         int    `yaml:"total_requests"`
 	MaxConcurrentRequests int    `yaml:"max_concurrent_requests"`
 	MinConcurrentRequests int    `yaml:"min_concurrent_requests"`
+	WarmupRequests        int    `yaml:"warmup_requests"`
 }
 
 func loadConfig() Config {
@@ -107,10 +108,10 @@ func initialiseResultsFile() {
 
 func warmUp(c pb.GreeterClient, concurrentRequests int, config Config) {
 	var wg sync.WaitGroup
-	metricsChan := make(chan Metric, config.TotalRequests)
+	metricsChan := make(chan Metric, config.WarmupRequests)
 	semaphore := make(chan struct{}, concurrentRequests)
 
-	for i := 0; i < config.TotalRequests; i++ {
+	for i := 0; i < config.WarmupRequests; i++ {
 		wg.Add(1)
 		semaphore <- struct{}{} // Blocks if concurrentRequests are already running
 		go func() {
