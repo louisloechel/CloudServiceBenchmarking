@@ -23,6 +23,7 @@ import (
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	pb "github.com/louisloechel/cloudservicebenchmarking/pb"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -137,6 +138,9 @@ func main() {
 		Metrics struct {
 			Enabled bool `yaml:"enabled"`
 		} `yaml:"metrics"`
+		Telemetry struct {
+			Enabled bool `yaml:"enabled"`
+		} `yaml:"telemetry"`
 	}
 
 	// Load the config.yml file
@@ -159,6 +163,7 @@ func main() {
 	enableMetrics := config.Metrics.Enabled
 	enableLogging := config.Logging.Enabled
 	enableAuth := config.Auth.Enabled
+	enableTelemetry := config.Telemetry.Enabled
 
 	stdlog.Printf("Metrics enabled: %v", enableMetrics)
 	stdlog.Printf("Logging enabled: %v", enableLogging)
@@ -184,6 +189,13 @@ func main() {
 			func() grpc.UnaryServerInterceptor {
 				if enableAuth {
 					return selector.UnaryServerInterceptor(auth.UnaryServerInterceptor(authFn), selector.MatchFunc(allButHealthZ))
+				}
+				return noOpInterceptor
+			}(),
+			// Conditionally include the telemetry interceptor
+			func() grpc.UnaryServerInterceptor {
+				if enableTelemetry {
+					return otelgrpc.UnaryServerInterceptor()
 				}
 				return noOpInterceptor
 			}(),
