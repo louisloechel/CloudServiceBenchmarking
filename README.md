@@ -3,7 +3,7 @@
 
 ## Rodamap
 - [X] Set-up simple client-server architecture (containerized)
-- [ ] add variety of interceptors
+- [X] add variety of interceptors
 - [X] create load generator/benchmarking tool
 - [X] GCP setup
 - [ ] run Benchmarking Experiments
