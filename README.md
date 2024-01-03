@@ -28,7 +28,11 @@ total_requests: 100000
 max_concurrent_requests: 100
 min_concurrent_requests: 1
 ```
-
+#### Warmup
+Specify the amount of requests sentto the server before the experiment is prperly started in the ```client/config.yml``` file. In the example below, the client will send 100.000 requests before the experiment is started.
+```yml
+warmup_requests: 1000000
+```
 
 ## Local Setup
 ### Compile Locally
