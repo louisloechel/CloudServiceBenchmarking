@@ -6,6 +6,7 @@ DISCLAIMER: Parts of this code are referencing following sources:
 package main
 
 import (
+	"container/list"
 	"context"
 	"encoding/csv"
 	"fmt"
@@ -21,14 +22,6 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	grpcMetadata "google.golang.org/grpc/metadata"
 )
-
-// var (
-// 	address               = "localhost:50051"
-// 	defaultName           = "world"
-// 	totalRequests         = 100 // Total number of requests to send
-// 	maxConcurrentRequests = 5   // Maximum number of concurrent requests
-// 	minConcurrentRequests = 1   // Minimum number of concurrent requests
-// )
 
 type Metric struct {
 	Duration time.Duration
@@ -84,7 +77,7 @@ func initialiseResultsFile() {
 
 	// Write header if the file is empty
 	if info.Size() == 0 {
-		err = writer.Write([]string{"Timestamp", "Total Requests", "Concurrent Requests", "Average Latency", "Max Latency", "Min Latency", "Avg. Throughput", "Time Elapsed"})
+		err = writer.Write([]string{"Timestamp", "Total Requests", "Concurrent Requests", "Average Latency", "Max Latency", "Min Latency", "Avg. Throughput req/s", "Time Elapsed"})
 		if err != nil {
 			log.Fatalf("Could not write to results.csv: %v", err)
 		}
@@ -138,6 +131,35 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 	var wg sync.WaitGroup
 	metricsChan := make(chan Metric, config.TotalRequests)
 	semaphore := make(chan struct{}, concurrentRequests)
+	throughputChan := make(chan time.Time)
+
+	// Goroutine to calculate moving average throughput
+	var movingAvgThroughput []float64
+	go func() {
+		requestTimes := list.New()
+		ticker := time.NewTicker(time.Second)
+		for {
+			select {
+			case <-ticker.C:
+				// Remove outdated timestamps
+				cutoff := time.Now().Add(-1 * time.Second)
+				for requestTimes.Len() > 0 {
+					if requestTimes.Front().Value.(time.Time).Before(cutoff) {
+						requestTimes.Remove(requestTimes.Front())
+					} else {
+						break
+					}
+				}
+				// Record the throughput
+				movingAvgThroughput = append(movingAvgThroughput, float64(requestTimes.Len()))
+			case t, ok := <-throughputChan:
+				if !ok {
+					return
+				}
+				requestTimes.PushBack(t)
+			}
+		}
+	}()
 
 	for i := 0; i < config.TotalRequests; i++ {
 		wg.Add(1)
@@ -158,39 +180,43 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 				return
 			}
 			metricsChan <- Metric{Duration: time.Since(start)}
+			throughputChan <- time.Now()
 		}()
 	}
 
 	wg.Wait()
 	close(metricsChan)
+	close(throughputChan)
 
 	// Calculate and print metrics.
-	// todo: this calculates nonsense. Fix or delete
-	var totalDuration time.Duration
+	totalDuration := time.Since(runStart)
+	avgThroughput := float64(config.TotalRequests) / float64(totalDuration.Seconds())
 	var maxDuration time.Duration
 	var minDuration = time.Duration(1<<63 - 1)
-	count := 0
 
 	for metric := range metricsChan {
-		totalDuration += metric.Duration
 		if metric.Duration > maxDuration {
 			maxDuration = metric.Duration
 		}
 		if metric.Duration < minDuration {
 			minDuration = metric.Duration
 		}
-		count++
 	}
 
-	avgDuration := totalDuration / time.Duration(count)
+	avgDuration := totalDuration / time.Duration(config.TotalRequests)
 
 	log.Printf("Total requests: %d", config.TotalRequests)
 	log.Printf("Concurrent requests: %d", concurrentRequests)
 	log.Printf("Average latency: %v", avgDuration)
 	log.Printf("Max latency: %v", maxDuration)
 	log.Printf("Min latency: %v", minDuration)
-	log.Printf("Avg Throughput: %f req/s", float64(config.TotalRequests)/avgDuration.Seconds())
+	log.Printf("Avg Throughput: %f req/s", avgThroughput)
 	log.Printf("Time elapsed: %v", totalDuration)
+
+	// // Moving average throughput
+	// for _, throughput := range movingAvgThroughput {
+	// 	log.Printf("Moving average throughput: %f req/s", throughput)
+	// }
 
 	// Open results.csv for appending, create it if it doesn't exist
 	file, err := os.OpenFile("/results/results.csv", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -210,7 +236,7 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 
 	// Write header if the file is empty
 	if info.Size() == 0 {
-		err = writer.Write([]string{"Timestamp", "Total Requests", "Concurrent Requests", "Average Latency", "Max Latency", "Min Latency", "Avg. Throughput", "Time Elapsed"})
+		err = writer.Write([]string{"Timestamp", "Total Requests", "Concurrent Requests", "Average Latency", "Max Latency", "Min Latency", "Avg. Throughput req/s", "Time Elapsed"})
 		if err != nil {
 			log.Fatalf("Could not write to results.csv: %v", err)
 		}
@@ -224,8 +250,8 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 		fmt.Sprintf("%v", avgDuration),
 		fmt.Sprintf("%v", maxDuration),
 		fmt.Sprintf("%v", minDuration),
-		fmt.Sprintf("%v", float64(config.TotalRequests)/avgDuration.Seconds()),
-		fmt.Sprintf("%v", time.Since(runStart)),
+		fmt.Sprintf("%v", avgThroughput),
+		fmt.Sprintf("%v", totalDuration),
 	})
 	if err != nil {
 		log.Fatalf("Could not write to results.csv: %v", err)
@@ -259,7 +285,7 @@ func main() {
 	c := pb.NewGreeterClient(conn)
 
 	// Warm up the server
-	log.Printf("Warming up the server. Sending %d requests", config.TotalRequests)
+	log.Printf("Warming up the server. Sending %d requests", config.WarmupRequests)
 	warmUp(c, config.MaxConcurrentRequests, config)
 	log.Printf("Warm up finished. Benchmarking...\n------------------")
 
