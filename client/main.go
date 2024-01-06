@@ -6,7 +6,6 @@ DISCLAIMER: Parts of this code are referencing following sources:
 package main
 
 import (
-	"container/list"
 	"context"
 	"encoding/csv"
 	"fmt"
@@ -93,6 +92,7 @@ func initialiseResultsFile() {
 		fmt.Sprintf("%v", 0),
 		fmt.Sprintf("%v", 0),
 		fmt.Sprintf("%v", 0),
+		fmt.Sprintf("%v", 0),
 	})
 	if err != nil {
 		log.Fatalf("Could not write to results.csv: %v", err)
@@ -131,35 +131,6 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 	var wg sync.WaitGroup
 	metricsChan := make(chan Metric, config.TotalRequests)
 	semaphore := make(chan struct{}, concurrentRequests)
-	throughputChan := make(chan time.Time)
-
-	// Goroutine to calculate moving average throughput
-	var movingAvgThroughput []float64
-	go func() {
-		requestTimes := list.New()
-		ticker := time.NewTicker(time.Second)
-		for {
-			select {
-			case <-ticker.C:
-				// Remove outdated timestamps
-				cutoff := time.Now().Add(-1 * time.Second)
-				for requestTimes.Len() > 0 {
-					if requestTimes.Front().Value.(time.Time).Before(cutoff) {
-						requestTimes.Remove(requestTimes.Front())
-					} else {
-						break
-					}
-				}
-				// Record the throughput
-				movingAvgThroughput = append(movingAvgThroughput, float64(requestTimes.Len()))
-			case t, ok := <-throughputChan:
-				if !ok {
-					return
-				}
-				requestTimes.PushBack(t)
-			}
-		}
-	}()
 
 	for i := 0; i < config.TotalRequests; i++ {
 		wg.Add(1)
@@ -180,17 +151,14 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 				return
 			}
 			metricsChan <- Metric{Duration: time.Since(start)}
-			throughputChan <- time.Now()
 		}()
 	}
 
 	wg.Wait()
 	close(metricsChan)
-	close(throughputChan)
 
 	// Calculate and print metrics.
 	totalDuration := time.Since(runStart)
-	avgThroughput := float64(config.TotalRequests) / float64(totalDuration.Seconds())
 	var maxDuration time.Duration
 	var minDuration = time.Duration(1<<63 - 1)
 
@@ -202,7 +170,7 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 			minDuration = metric.Duration
 		}
 	}
-
+	avgThroughput := float64(config.TotalRequests) / float64(totalDuration.Seconds())
 	avgDuration := totalDuration / time.Duration(config.TotalRequests)
 
 	log.Printf("Total requests: %d", config.TotalRequests)
