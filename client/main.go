@@ -92,7 +92,6 @@ func initialiseResultsFile() {
 		fmt.Sprintf("%v", 0),
 		fmt.Sprintf("%v", 0),
 		fmt.Sprintf("%v", 0),
-		fmt.Sprintf("%v", 0),
 	})
 	if err != nil {
 		log.Fatalf("Could not write to results.csv: %v", err)
@@ -161,6 +160,9 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 	totalDuration := time.Since(runStart)
 	var maxDuration time.Duration
 	var minDuration = time.Duration(1<<63 - 1)
+	var sumDuration time.Duration
+
+	count := 0
 
 	for metric := range metricsChan {
 		if metric.Duration > maxDuration {
@@ -169,13 +171,16 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 		if metric.Duration < minDuration {
 			minDuration = metric.Duration
 		}
+		count++
+		sumDuration += metric.Duration
 	}
-	avgThroughput := float64(config.TotalRequests) / float64(totalDuration.Seconds())
-	avgDuration := totalDuration / time.Duration(config.TotalRequests)
+
+	avgThroughput := float64(config.TotalRequests) / float64(sumDuration.Seconds()) //float64(totalDuration.Seconds())
+	avgLatency := sumDuration / time.Duration(count)                                // totalDuration/time.Duration(config.TotalRequests)
 
 	log.Printf("Total requests: %d", config.TotalRequests)
 	log.Printf("Concurrent requests: %d", concurrentRequests)
-	log.Printf("Average latency: %v", avgDuration)
+	log.Printf("Average latency: %v", avgLatency)
 	log.Printf("Max latency: %v", maxDuration)
 	log.Printf("Min latency: %v", minDuration)
 	log.Printf("Avg Throughput: %f req/s", avgThroughput)
@@ -215,7 +220,7 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 		fmt.Sprintf("%v", time.Now()),
 		fmt.Sprintf("%d", config.TotalRequests),
 		fmt.Sprintf("%d", concurrentRequests),
-		fmt.Sprintf("%v", avgDuration),
+		fmt.Sprintf("%v", avgLatency),
 		fmt.Sprintf("%v", maxDuration),
 		fmt.Sprintf("%v", minDuration),
 		fmt.Sprintf("%v", avgThroughput),
