@@ -1,4 +1,4 @@
-Timestamp                                              ,Total Requests ,Concurrent Requests ,Average Latency ,Max Latency  ,Min Latency ,Avg. Throughput req/s ,Time Elapsed
+Timestamp                                              ,Total Requests,Concurrent Requests,Average Latency,Max Latency,Min Latency,Avg. Throughput req/s,Time Elapsed
 2024-01-08 14:42:31.413500305 +0000 UTC m=+0.004045626 ,             0 ,                  0 ,0               ,0            ,0           ,    0                 ,0
 2024-01-08 14:42:31.844424389 +0000 UTC m=+0.434969709 ,          1000 ,                  1 ,424.885µs       ,15.391917ms  ,66.083µs    , 2353.5725541506913   ,429.342833ms
 2024-01-08 14:42:32.063856722 +0000 UTC m=+0.654402043 ,          1000 ,                  2 ,431.814µs       ,17.695167ms  ,66.25µs     , 2315.8068485735726   ,217.942541ms
