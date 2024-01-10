@@ -1,5 +1,7 @@
 # CloudServiceBenchmarking
-**🧪 Benchmarking gRPC Interceptors for Microservices**
+
+![](deliverables/CSB_2nd_Mst.png)
+
 
 ## Rodamap
 - [X] Set-up simple client-server architecture (containerized)
