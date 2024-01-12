@@ -32,7 +32,7 @@ resource "google_compute_instance" "client_instance" {
   }
 
   network_interface {
-    network = "default"
+    network = "csb-vpc"
     access_config {
       // Ephemeral IP
     }
@@ -65,7 +65,7 @@ resource "google_compute_instance" "server_instance" {
   }
 
   network_interface {
-    network = "default"
+    network = "csb-vpc"
     access_config {
       // Ephemeral IP
     }
