@@ -28,6 +28,9 @@ newgrp docker << EOF
 # Start docker
 sudo systemctl start docker
 
+# Wait for docker to start
+while ! docker info >/dev/null 2>&1; do sleep 1; done
+
 # Build and run docker-compose
 docker compose  -f "docker-compose.yml" up -d --build grpc-server
 
