@@ -4,8 +4,23 @@ provider "google" {
   region      = var.gcp_region
 }
 
-resource "google_compute_instance" "vm_instance" {
-  name         = "docker-vm"
+# Create a VPC
+resource "google_compute_network" "vpc_network" {
+  name                    = "csb-vpc"
+  auto_create_subnetworks = false
+}
+
+# Create a subnet
+resource "google_compute_subnetwork" "subnet" {
+  name          = "my-subnet"
+  network       = google_compute_network.vpc_network.name
+  ip_cidr_range = "10.0.0.0/16"
+  region        = var.gcp_region
+}
+
+# Create the client VM instance
+resource "google_compute_instance" "client_instance" {
+  name         = "client-vm"
   machine_type = "e2-medium"
   zone         = var.gcp_zone
 
@@ -23,7 +38,7 @@ resource "google_compute_instance" "vm_instance" {
     }
   }
 
-  metadata_startup_script = file("startup.sh")
+  metadata_startup_script = file("startups-scripts/tartup_client.sh")
 
   service_account {
     scopes = ["cloud-platform"]
@@ -36,13 +51,101 @@ resource "google_compute_instance" "vm_instance" {
   }
 }
 
-resource "google_compute_firewall" "firewall" {
-  name    = "allow-http-https"
-  network = "default"
+# Create the server VM instance
+resource "google_compute_instance" "server_instance" {
+  name         = "server-vm"
+  machine_type = "e2-medium"
+  zone         = var.gcp_zone
+
+  boot_disk {
+    initialize_params {
+      # Ubuntu 22.04 LTS
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+    }
+  }
+
+  network_interface {
+    network = "default"
+    access_config {
+      // Ephemeral IP
+    }
+  }
+
+  metadata_startup_script = file("startups-scripts/startup_server.sh")
+
+  service_account {
+    scopes = ["cloud-platform"]
+  }
+
+  tags = ["http-client", "https-client"]
+
+  metadata = {
+    ssh-keys = "user_name:${file("../env/my-ssh-key.pub")}"
+  }
+}
+
+# resource "google_compute_instance" "vm_instance" {
+#   name         = "docker-vm"
+#   machine_type = "e2-medium"
+#   zone         = var.gcp_zone
+
+#   boot_disk {
+#     initialize_params {
+#       # Ubuntu 22.04 LTS
+#       image = "ubuntu-os-cloud/ubuntu-2204-lts"
+#     }
+#   }
+
+#   network_interface {
+#     network = "default"
+#     access_config {
+#       // Ephemeral IP
+#     }
+#   }
+
+#   metadata_startup_script = file("startup.sh")
+
+#   service_account {
+#     scopes = ["cloud-platform"]
+#   }
+
+#   tags = ["http-server", "https-server"]
+
+#   metadata = {
+#     ssh-keys = "user_name:${file("../env/my-ssh-key.pub")}"
+#   }
+# }
+
+# Create a firewall rule to allow internal communication within the VPC
+resource "google_compute_firewall" "allow_internal" {
+  name    = "allow-internal"
+  network = google_compute_network.vpc_network.name
 
   allow {
     protocol = "tcp"
-    ports    = ["80", "443"]
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "udp"
+    ports    = ["0-65535"]
+  }
+
+  allow {
+    protocol = "icmp"
+  }
+
+  source_ranges = ["10.0.0.0/16"]
+}
+
+# Create a firewall rule to allow external SSH, HTTP, HTTPS access
+resource "google_compute_firewall" "allow_external" {
+  name    = "allow-external"
+  network = google_compute_network.vpc_network.name
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22", "80", "443"]
   }
 
   source_ranges = ["0.0.0.0/0"]
@@ -62,12 +165,12 @@ resource "null_resource" "benchmark_waiter" {
       type        = "ssh"
       user        = "user_name"
       private_key = file(var.private_key_path)
-      host        = google_compute_instance.vm_instance.network_interface[0].access_config[0].nat_ip
+      host        = google_compute_instance.client_instance.network_interface[0].access_config[0].nat_ip
     }
   }
 
   provisioner "local-exec" {
     // Caution: "StrictHostKeyChecking=no"" is less secure but should be fine in this use case.
-    command = "echo 'Benchmarking completed. Downloading results.csv.' && scp -o StrictHostKeyChecking=no -i ../env/my-ssh-key user_name@${google_compute_instance.vm_instance.network_interface[0].access_config[0].nat_ip}:/home/ubuntu/CloudServiceBenchmarking/results.csv ../results.csv"
+    command = "echo 'Benchmarking completed. Downloading results.csv.' && scp -o StrictHostKeyChecking=no -i ../env/my-ssh-key user_name@${google_compute_instance.client_instance.network_interface[0].access_config[0].nat_ip}:/home/ubuntu/CloudServiceBenchmarking/results.csv ../results.csv"
   }
 }
