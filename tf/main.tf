@@ -38,7 +38,7 @@ resource "google_compute_instance" "client_instance" {
     }
   }
 
-  metadata_startup_script = file("startups-scripts/tartup_client.sh")
+  metadata_startup_script = file("startup_client.sh")
 
   service_account {
     scopes = ["cloud-platform"]
@@ -71,7 +71,7 @@ resource "google_compute_instance" "server_instance" {
     }
   }
 
-  metadata_startup_script = file("startups-scripts/startup_server.sh")
+  metadata_startup_script = file("startup_server.sh")
 
   service_account {
     scopes = ["cloud-platform"]
