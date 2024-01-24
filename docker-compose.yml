@@ -11,8 +11,8 @@ services:
     build:
       context: .
       dockerfile: client/Dockerfile
-    depends_on:
-      - grpc-server
+    # depends_on:
+    #   - grpc-server
     network_mode: "host"
     volumes:
       - .:/results
