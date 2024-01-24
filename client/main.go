@@ -27,7 +27,7 @@ type Metric struct {
 }
 
 type Config struct {
-	Address               string `yaml:"server_address"`
+	Address               string `yaml:"server_address" + ":" + "yaml:server_port"`
 	DefaultName           string `yaml:"default_name"`
 	TotalRequests         int    `yaml:"total_requests"`
 	MaxConcurrentRequests int    `yaml:"max_concurrent_requests"`
