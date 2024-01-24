@@ -10,6 +10,8 @@ logging:
   enabled: true
 
 # Auth Interceptor
+# CAUTION: This is a mock auth interceptor, it is not secure and should not be used in production
+# + it currently breaks the gRPC connection
 auth:
   enabled: false
 
