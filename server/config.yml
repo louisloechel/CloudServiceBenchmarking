@@ -11,7 +11,7 @@ logging:
 
 # Auth Interceptor
 auth:
-  enabled: true
+  enabled: false
 
 # Prometheus Metrics Interceptor
 metrics:
