@@ -23,10 +23,15 @@ cd /home/ubuntu/CloudServiceBenchmarking
 sudo usermod -aG docker louisloechel
 
 # Overwrite client/config.yml server_address with the server's IP
-SERVER_IP=$(terraform output server_public_ip)
+SERVER_IP=$(terraform output server_internal_ip)
+#SERVER_IP="$(gcloud compute instances describe 'server_instance' --zone='europe-west10-a' --format='get(networkInterfaces[0].accessConfigs[0].natIP)')"
+
+# Remove quotes from SERVER_IP
+SERVER_IP="${SERVER_IP%\"}"
+SERVER_IP="${SERVER_IP#\"}"
 
 # Replace the server_address in client/config.yml with the server's IP
-sed -i "s/server_address:.*/server_address: $SERVER_IP/" ../client/config.yml
+sed -i "" "s/server_address:.*/server_address: $SERVER_IP/" ../client/config.yml
 
 # Start a new subshell with the new group
 newgrp docker << EOF
