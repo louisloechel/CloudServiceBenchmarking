@@ -7,16 +7,16 @@
 
 # Logging Interceptor
 logging:
-  enabled: false
+  enabled: true
 
 # Auth Interceptor
 auth:
-  enabled: false
+  enabled: true
 
 # Prometheus Metrics Interceptor
 metrics:
-  enabled: false
+  enabled: true
 
 # Open Telemetry Interceptor
 telemetry:
-  enable: false
+  enable: true
