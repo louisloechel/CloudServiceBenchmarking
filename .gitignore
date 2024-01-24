@@ -12,3 +12,4 @@ results.csv
 tf/terraform.tfstate
 tf/terraform.tfstate
 tf/terraform.tfstate.backup
+*.tfstate
