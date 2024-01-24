@@ -27,7 +27,8 @@ type Metric struct {
 }
 
 type Config struct {
-	Address               string `yaml:"server_address" + ":" + "yaml:server_port"`
+	Address               string `yaml:"server_address"`
+	Port                  string `yaml:"server_port"`
 	DefaultName           string `yaml:"default_name"`
 	TotalRequests         int    `yaml:"total_requests"`
 	MaxConcurrentRequests int    `yaml:"max_concurrent_requests"`
@@ -243,8 +244,10 @@ func experimentDone() {
 func main() {
 	config := loadConfig()
 
+	endpoint := fmt.Sprintf("%s:%s", config.Address, config.Port)
+
 	conn, err := grpc.Dial(
-		config.Address,
+		endpoint,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithChainUnaryInterceptor(
 			timeout.UnaryClientInterceptor(500*time.Millisecond),
