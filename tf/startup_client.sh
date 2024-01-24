@@ -23,8 +23,8 @@ cd /home/ubuntu/CloudServiceBenchmarking
 sudo usermod -aG docker louisloechel
 
 # Overwrite client/config.yml server_address with the server's IP
-SERVER_IP=$(terraform output server_internal_ip)
-#SERVER_IP="$(gcloud compute instances describe 'server_instance' --zone='europe-west10-a' --format='get(networkInterfaces[0].accessConfigs[0].natIP)')"
+#SERVER_IP=$(terraform output server_internal_ip)
+SERVER_IP="$(gcloud compute instances describe 'server-vm' --zone='europe-west10-a' --format='get(networkInterfaces[0].accessConfigs[0].natIP)')"
 
 # Remove quotes from SERVER_IP
 SERVER_IP="${SERVER_IP%\"}"
