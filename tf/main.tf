@@ -12,49 +12,16 @@ resource "google_compute_network" "vpc_network" {
 
 # Create a subnet
 resource "google_compute_subnetwork" "subnet" {
-  name          = "my-subnet"
+  name          = "csb-subnet"
   network       = google_compute_network.vpc_network.name
   ip_cidr_range = "10.0.0.0/16"
   region        = var.gcp_region
 }
 
-# Create the client VM instance
-resource "google_compute_instance" "client_instance" {
-  name         = "client-vm"
-  machine_type = "e2-standard-16" # 16 vCPUs, 64 GB memory | no shared resources and enough of 'em
-  zone         = var.gcp_zone
-
-  boot_disk {
-    initialize_params {
-      # Ubuntu 22.04 LTS
-      image = "ubuntu-os-cloud/ubuntu-2204-lts"
-    }
-  }
-
-  network_interface {
-    network = "csb-vpc"
-    access_config {
-      // Ephemeral IP
-    }
-  }
-
-  metadata_startup_script = file("startup_client.sh")
-
-  service_account {
-    scopes = ["cloud-platform"]
-  }
-
-  tags = ["http-server", "https-server"]
-
-  metadata = {
-    ssh-keys = "user_name:${file("../env/my-ssh-key.pub")}"
-  }
-}
-
 # Create the server VM instance
 resource "google_compute_instance" "server_instance" {
   name         = "server-vm"
-  machine_type = "e2-standard-16" # 16 vCPUs, 64 GB memory | no shared resources and enough of 'em
+  machine_type = "e2-standard-4" # 16 vCPUs, 64 GB memory | no shared resources and enough of 'em
   zone         = var.gcp_zone
 
   boot_disk {
@@ -65,7 +32,7 @@ resource "google_compute_instance" "server_instance" {
   }
 
   network_interface {
-    network = "csb-vpc"
+    subnetwork = google_compute_subnetwork.subnet.self_link
     access_config {
       // Ephemeral IP
     }
@@ -84,37 +51,38 @@ resource "google_compute_instance" "server_instance" {
   }
 }
 
-# resource "google_compute_instance" "vm_instance" {
-#   name         = "docker-vm"
-#   machine_type = "e2-medium"
-#   zone         = var.gcp_zone
+# Create the client VM instance
+resource "google_compute_instance" "client_instance" {
+  name         = "client-vm"
+  machine_type = "e2-standard-16" # 16 vCPUs, 64 GB memory | no shared resources and enough of 'em
+  zone         = var.gcp_zone
 
-#   boot_disk {
-#     initialize_params {
-#       # Ubuntu 22.04 LTS
-#       image = "ubuntu-os-cloud/ubuntu-2204-lts"
-#     }
-#   }
+  boot_disk {
+    initialize_params {
+      # Ubuntu 22.04 LTS
+      image = "ubuntu-os-cloud/ubuntu-2204-lts"
+    }
+  }
 
-#   network_interface {
-#     network = "default"
-#     access_config {
-#       // Ephemeral IP
-#     }
-#   }
+  network_interface {
+    subnetwork = google_compute_subnetwork.subnet.self_link
+    access_config {
+      // Ephemeral IP
+    }
+  }
 
-#   metadata_startup_script = file("startup.sh")
+  metadata_startup_script = file("startup_client.sh")
 
-#   service_account {
-#     scopes = ["cloud-platform"]
-#   }
+  service_account {
+    scopes = ["cloud-platform"]
+  }
 
-#   tags = ["http-server", "https-server"]
+  tags = ["http-server", "https-server"]
 
-#   metadata = {
-#     ssh-keys = "user_name:${file("../env/my-ssh-key.pub")}"
-#   }
-# }
+  metadata = {
+    ssh-keys = "user_name:${file("../env/my-ssh-key.pub")}"
+  }
+}
 
 # Create a firewall rule to allow internal communication within the VPC
 resource "google_compute_firewall" "allow_internal" {
@@ -151,6 +119,7 @@ resource "google_compute_firewall" "allow_external" {
   source_ranges = ["0.0.0.0/0"]
 }
 
+# Download result.csv from the client VM instance to the local machine after the benchmark is done
 resource "null_resource" "benchmark_waiter" {
   triggers = {
     always_run = "${timestamp()}"
@@ -170,7 +139,7 @@ resource "null_resource" "benchmark_waiter" {
   }
 
   provisioner "local-exec" {
-    // Caution: "StrictHostKeyChecking=no"" is less secure but should be fine in this use case.
+    // >>!! CAUTION !!<< "StrictHostKeyChecking=no"" is less secure but should be fine in this use case.
     command = "echo 'Benchmarking completed. Downloading results.csv.' && scp -o StrictHostKeyChecking=no -i ../env/my-ssh-key user_name@${google_compute_instance.client_instance.network_interface[0].access_config[0].nat_ip}:/home/ubuntu/CloudServiceBenchmarking/results.csv ../results.csv"
   }
 }
