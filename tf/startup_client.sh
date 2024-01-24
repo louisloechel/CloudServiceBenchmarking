@@ -22,12 +22,14 @@ cd /home/ubuntu/CloudServiceBenchmarking
 # Add user to docker group
 sudo usermod -aG docker louisloechel
 
-# Overwrite client/config.yml server_address with the server's IP
-#SERVER_IP=$(terraform output server_internal_ip)
-SERVER_IP="$(gcloud compute instances describe 'server-vm' --zone='europe-west10-a' --format='get(networkInterfaces[0].accessConfigs[0].natIP)')"
+# Overwrite client/config.yml server_address with the server's internal IP
+SERVER_IP="$(gcloud compute instances describe 'server-vm' --zone='europe-west10-a' --format='get(networkInterfaces[0].networkIP)')"
 
 # Replace the server_address in client/config.yml with the server's IP
 sudo sed -i "s/server_address:.*/server_address: $SERVER_IP/" client/config.yml
+
+# Ping the server-vm to make sure it's running
+while ! ping -c 1 $SERVER_IP; do sleep 1; done
 
 # Start a new subshell with the new group
 newgrp docker << EOF
@@ -39,6 +41,6 @@ sudo systemctl start docker
 while ! docker info >/dev/null 2>&1; do sleep 1; done
 
 # Build and run docker-compose
-docker compose  -f "docker-compose.yml" up -d --build grpc-client
+sudo docker compose  -f "docker-compose.yml" up -d --build grpc-client
 
 EOF
