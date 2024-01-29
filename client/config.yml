@@ -10,7 +10,7 @@
 server_address: localhost
 server_port: 50051
 default_name: world
-total_requests: 10000
-max_concurrent_requests: 100
-min_concurrent_requests: 1
-warmup_requests: 10000000
+total_requests: 1000000 # one million
+max_concurrent_requests: 1000 # one thousand
+min_concurrent_requests: 1 # one
+warmup_requests: 10000000 # ten million
