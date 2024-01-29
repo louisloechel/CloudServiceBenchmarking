@@ -38,7 +38,7 @@ newgrp docker << EOF
 sudo systemctl start docker
 
 # Wait for docker to start
-while ! docker info >/dev/null 2>&1; do sleep 1; done
+while ! docker info >/dev/null 2>&1; do sleep 10; done
 
 # Build and run docker-compose
 sudo docker compose  -f "docker-compose.yml" up -d --build grpc-client
