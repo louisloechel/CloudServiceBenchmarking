@@ -13,4 +13,4 @@ default_name: world
 total_requests: 10000
 max_concurrent_requests: 100
 min_concurrent_requests: 1
-warmup_requests: 10000
+warmup_requests: 10000000
