@@ -5,9 +5,9 @@
 # - Prometheus Metrics Interceptor: to do
 # - Open Telemetry Interceptor: to do
 
-# Logging Interceptor
+# Logging Interceptor (100)
 logging:
-  enabled: true
+  enabled: false
 
 # Auth Interceptor
 # CAUTION: This is a mock auth interceptor, it is not secure and should not be used in production
@@ -15,10 +15,10 @@ logging:
 auth:
   enabled: false
 
-# Prometheus Metrics Interceptor
+# Prometheus Metrics Interceptor (010)
 metrics:
   enabled: true
 
-# Open Telemetry Interceptor
+# Open Telemetry Interceptor (001)
 telemetry:
-  enable: true
+  enable: false
