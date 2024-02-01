@@ -7,7 +7,7 @@
 
 # Logging Interceptor (100)
 logging:
-  enabled: true
+  enabled: false
 
 # Auth Interceptor
 # CAUTION: This is a mock auth interceptor, it is not secure and should not be used in production
