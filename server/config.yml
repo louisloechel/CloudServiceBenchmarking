@@ -15,12 +15,13 @@ metrics:
 
 # Open Telemetry Interceptor (001)
 telemetry:
-  enable: true
+  enable: false
 
 #---------------------------------------------
 # Auth Interceptor
-# CAUTION: This is a mock auth interceptor,
-# it is not secure and should not be used in
+# CAUTION: Do not use.
+# This is a mock auth interceptor.
+# It is not secure and should not be used in
 # production
 # + it currently breaks the gRPC connection
 auth:
