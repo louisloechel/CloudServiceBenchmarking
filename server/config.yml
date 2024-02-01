@@ -21,4 +21,4 @@ metrics:
 
 # Open Telemetry Interceptor (001)
 telemetry:
-  enable: false
+  enable: true
