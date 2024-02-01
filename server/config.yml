@@ -9,16 +9,19 @@
 logging:
   enabled: false
 
-# Auth Interceptor
-# CAUTION: This is a mock auth interceptor, it is not secure and should not be used in production
-# + it currently breaks the gRPC connection
-auth:
-  enabled: false
-
 # Prometheus Metrics Interceptor (010)
 metrics:
-  enabled: false
+  enabled: true
 
 # Open Telemetry Interceptor (001)
 telemetry:
-  enable: true
+  enable: false
+
+#---------------------------------------------
+# Auth Interceptor
+# CAUTION: This is a mock auth interceptor,
+# it is not secure and should not be used in
+# production
+# + it currently breaks the gRPC connection
+auth:
+  enabled: false
