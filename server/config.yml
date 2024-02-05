@@ -11,11 +11,11 @@ logging:
 
 # Prometheus Metrics Interceptor (010)
 metrics:
-  enabled: true
+  enabled: false
 
 # Open Telemetry Interceptor (001)
 telemetry:
-  enable: false
+  enable: true
 
 #---------------------------------------------
 # Auth Interceptor
