@@ -50,7 +50,7 @@ terraform apply
 ```
 ⏳ *optional:* SSH into the (client) VM. You'll find the current result progress in the ```/home/ubuntu/CloudServiceBenchmarking``` directory. Check out the ```result.csv``` file for the current progress. 
 
-🏁 After the Experiment is done, the ```result.csv``` file will be copied to your local machine automatically.
+🏁 After the Experiment is done, the ```results.csv``` file will be copied to your local machine automatically.
 
 To delete the resources, run
 ```bash
