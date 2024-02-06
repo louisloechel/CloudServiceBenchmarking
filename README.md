@@ -36,6 +36,27 @@ Specify the amount of requests sentto the server before the experiment is prperl
 warmup_requests: 1000000
 ```
 
+
+
+## GCP Setup
+### Terraform
+From the ```/tf``` directory of this repo, initialise terraform
+```bash
+terraform init
+```
+Then run the terraform script to create the GCP resources
+```bash
+terraform apply
+```
+⏳ *optional:* SSH into the (client) VM. You'll find the current result progress in the ```/home/ubuntu/CloudServiceBenchmarking``` directory. Check out the ```result.csv``` file for the current progress. 
+
+🏁 After the Experiment is done, the ```result.csv``` file will be copied to your local machine automatically.
+
+To delete the resources, run
+```bash
+terraform destroy
+```
+
 ## Local Setup
 ### Compile Locally
 From the ```/server``` directory of this repo, compile the server binary.
@@ -56,27 +77,9 @@ Runs the server container first, and then the client container. The client conta
 ``` bash
 docker-compose up
 ```
+🏁 After the Experiment is done, the ```result.csv``` file will be copied to your local machine automatically.
+
 ### Bring down containers
 ```bash
 docker-compose down
-```
-...
-
-## GCP Setup
-### Terraform
-From the ```/tf``` directory of this repo, initialise terraform
-```bash
-terraform init
-```
-Then run the terraform script to create the GCP resources
-```bash
-terraform apply
-```
-*optional:* if you decide to SSH into the (client) VM, you'll find the current result progress in the ```/home/ubuntu/CloudServiceBenchmarking``` directory. Check out the ```result.csv``` file for the current progress. 
-
-After the Experiment is done, the ```result.csv``` file will be copied to your local machine automatically.
-
-To delete the resources, run
-```bash
-terraform destroy
 ```
