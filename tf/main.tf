@@ -21,7 +21,7 @@ resource "google_compute_subnetwork" "subnet" {
 # Create the server VM instance
 resource "google_compute_instance" "server_instance" {
   name         = "server-vm"
-  machine_type = "e2-standard-4" # 16 vCPUs, 64 GB memory | no shared resources and enough of 'em
+  machine_type = "e2-standard-4" # 4 vCPUs, 16 GB memory | no shared resources and enough of 'em
   zone         = var.gcp_zone
 
   boot_disk {
