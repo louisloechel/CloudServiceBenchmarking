@@ -7,7 +7,7 @@
 
 # Logging Interceptor (100)
 logging:
-  enabled: true
+  enabled: false
 
 # Prometheus Metrics Interceptor (010)
 metrics:
