@@ -7,11 +7,11 @@
 
 # Logging Interceptor (100)
 logging:
-  enabled: false
+  enabled: true
 
 # Prometheus Metrics Interceptor (010)
 metrics:
-  enabled: true
+  enabled: false
 
 # Open Telemetry Interceptor (001)
 telemetry:
