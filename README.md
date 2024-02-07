@@ -41,6 +41,17 @@ warmup_requests: 1000000
 
 
 ## GCP Setup
+### Prerequisites
+- [Terraform](https://learn.hashicorp.com/tutorials/terraform/install-cli)
+- [GCP Account](https://cloud.google.com/)
+- [gcloud CLI](https://cloud.google.com/sdk/docs/install)
+
+### Service Account
+Create a service account in GCP and download the JSON key file. Rename it to ```credentials.json``` and place it in an ```/.env``` directory of this repo.
+
+### SSH Key
+Create an SSH key pair and place them in the ```/.env``` directory of this repo.
+
 ### Terraform
 From the ```/tf``` directory of this repo, initialise terraform
 ```bash
