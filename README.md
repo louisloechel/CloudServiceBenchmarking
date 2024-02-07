@@ -8,8 +8,8 @@
 - [X] add variety of interceptors
 - [X] create load generator/benchmarking tool
 - [X] GCP setup
-- [ ] run Benchmarking Experiments
-- [ ] Analyze results
+- [X] run Benchmarking Experiments
+- [X] Analyze results
 - [ ] Write report
 
 ## Benchmark Configuration
