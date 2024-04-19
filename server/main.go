@@ -36,7 +36,7 @@ import (
 const (
 	component = "grpc-component"
 	port      = "0.0.0.0:50051"
-	keyPath   = "server/public_key.pem"
+	keyPath   = "public_key.pem"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -46,7 +46,7 @@ type server struct {
 
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	// log.Printf("Received: %v", in.GetName())
+	stdlog.Printf("Received: %v", in.GetName())
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
 }
 

@@ -108,8 +108,9 @@ func warmUp(c pb.GreeterClient, concurrentRequests int, config Config) {
 
 	// generate token
 	// GenerateToken(policyPath string, serviceName string, purpose string, keyPath string, expirationInHours time.Duration)
-	goodToken, err := jwt.GenerateToken("client/policy.json", "client", "purpose1", "client/private_key.pem", 1)
-	log.Printf("Token: %s", goodToken)
+	badToken, err := jwt.GenerateToken("policy.json", "client", "purpose1", "private_key.pem", 1)
+	// log.Printf("Token: %s", badToken)
+	fmt.Println(badToken)
 	if err != nil {
 		log.Fatalf("Error on generating token: %v", err)
 	}
@@ -124,7 +125,7 @@ func warmUp(c pb.GreeterClient, concurrentRequests int, config Config) {
 			start := time.Now()
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 			// Append Metadata w/ Good Client Token
-			ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", goodToken)
+			ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", badToken)
 			defer cancel()
 			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: config.DefaultName})
 			if err != nil {
@@ -144,6 +145,15 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 	metricsChan := make(chan Metric, config.TotalRequests)
 	semaphore := make(chan struct{}, concurrentRequests)
 
+	// generate token
+	// GenerateToken(policyPath string, serviceName string, purpose string, keyPath string, expirationInHours time.Duration)
+	badToken, err := jwt.GenerateToken("policy.json", "client", "purpose2", "private_key.pem", 1)
+	// log.Printf("Token: %s", badToken)
+	fmt.Println(badToken)
+	if err != nil {
+		log.Fatalf("Error on generating token: %v", err)
+	}
+
 	for i := 0; i < config.TotalRequests; i++ {
 		wg.Add(1)
 		semaphore <- struct{}{} // Blocks if concurrentRequests are already running
@@ -152,15 +162,20 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 			defer func() { <-semaphore }() // Release the semaphore
 
 			// Custom auth
-			md := grpcMetadata.Pairs("authorization", "bearer yolo")
+			md := grpcMetadata.Pairs("authorization", badToken)
 
 			start := time.Now()
 			ctx, cancel := context.WithTimeout(grpcMetadata.NewOutgoingContext(context.Background(), md), time.Second)
+			// Append Metadata w/ Good Client Token
+			ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", badToken)
+
 			defer cancel()
-			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: config.DefaultName})
+			response, err := c.SayHello(ctx, &pb.HelloRequest{Name: config.DefaultName})
 			if err != nil {
 				log.Printf("Could not greet: %v", err)
 				return
+			} else {
+				log.Printf("Response: %v", response)
 			}
 			metricsChan <- Metric{Duration: time.Since(start)}
 		}()
