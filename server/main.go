@@ -29,11 +29,14 @@ import (
 	"google.golang.org/grpc/codes"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/status"
+
+	purposelimiter "github.com/louisloechel/purpl"
 )
 
 const (
 	component = "grpc-component"
 	port      = "0.0.0.0:50051"
+	keyPath   = "server/public_key.pem"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -141,6 +144,9 @@ func main() {
 		Telemetry struct {
 			Enabled bool `yaml:"enabled"`
 		} `yaml:"telemetry"`
+		Purpl struct {
+			Enabled bool `yaml:"enabled"`
+		} `yaml:"purpl"`
 	}
 
 	// Load the config.yml file
@@ -164,10 +170,13 @@ func main() {
 	enableLogging := config.Logging.Enabled
 	enableAuth := config.Auth.Enabled
 	enableTelemetry := config.Telemetry.Enabled
+	enablePurpl := config.Purpl.Enabled
 
 	stdlog.Printf("Metrics enabled: %v", enableMetrics)
 	stdlog.Printf("Logging enabled: %v", enableLogging)
 	stdlog.Printf("Auth enabled: %v", enableAuth)
+	stdlog.Printf("Telemetry enabled: %v", enableTelemetry)
+	stdlog.Printf("Purpl enabled: %v", enablePurpl)
 
 	opts := []grpc.ServerOption{
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(
@@ -196,6 +205,13 @@ func main() {
 			func() grpc.UnaryServerInterceptor {
 				if enableTelemetry {
 					return otelgrpc.UnaryServerInterceptor()
+				}
+				return noOpInterceptor
+			}(),
+			// Conditionally include the purpl interceptor
+			func() grpc.UnaryServerInterceptor {
+				if enablePurpl {
+					return purposelimiter.UnaryServerInterceptor(keyPath)
 				}
 				return noOpInterceptor
 			}(),

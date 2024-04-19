@@ -20,6 +20,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	grpcMetadata "google.golang.org/grpc/metadata"
+
+	jwt "github.com/Siar-Akbayin/jwt-go-auth"
 )
 
 type Metric struct {
@@ -104,6 +106,14 @@ func warmUp(c pb.GreeterClient, concurrentRequests int, config Config) {
 	metricsChan := make(chan Metric, config.WarmupRequests)
 	semaphore := make(chan struct{}, concurrentRequests)
 
+	// generate token
+	// GenerateToken(policyPath string, serviceName string, purpose string, keyPath string, expirationInHours time.Duration)
+	goodToken, err := jwt.GenerateToken("client/policy.json", "client", "purpose1", "client/private_key.pem", 1)
+	log.Printf("Token: %s", goodToken)
+	if err != nil {
+		log.Fatalf("Error on generating token: %v", err)
+	}
+
 	for i := 0; i < config.WarmupRequests; i++ {
 		wg.Add(1)
 		semaphore <- struct{}{} // Blocks if concurrentRequests are already running
@@ -113,6 +123,8 @@ func warmUp(c pb.GreeterClient, concurrentRequests int, config Config) {
 
 			start := time.Now()
 			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			// Append Metadata w/ Good Client Token
+			ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", goodToken)
 			defer cancel()
 			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: config.DefaultName})
 			if err != nil {

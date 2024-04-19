@@ -1,0 +1,28 @@
+# This config file is used to configure the server and specify the use of gRPC-intercepors
+# Currently implemented interceptors are:
+# - Logging Interceptor: logs the request and response of each gRPC call
+# - Auth Interceptor: authenticates the user by checking mock token
+# - Prometheus Metrics Interceptor: to do
+# - Open Telemetry Interceptor: to do
+
+# Logging Interceptor (100)
+logging:
+  enabled: false
+
+# Prometheus Metrics Interceptor (010)
+metrics:
+  enabled: false
+
+# Open Telemetry Interceptor (001)
+telemetry:
+  enable: false
+
+#---------------------------------------------
+# Auth Interceptor
+# CAUTION: Do not use.
+# This is a mock auth interceptor.
+# It is not secure and should not be used in
+# production
+# + it currently breaks the gRPC connection
+auth:
+  enabled: false

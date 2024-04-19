@@ -7,7 +7,7 @@
 
 # Logging Interceptor (100)
 logging:
-  enabled: true
+  enabled: false
 
 # Prometheus Metrics Interceptor (010)
 metrics:
@@ -25,4 +25,7 @@ telemetry:
 # production
 # + it currently breaks the gRPC connection
 auth:
+  enabled: false
+
+purpl:
   enabled: false

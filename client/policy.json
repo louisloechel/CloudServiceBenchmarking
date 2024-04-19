@@ -1,0 +1,27 @@
+{
+    "services": {
+        "client": {
+            "purpose1": {
+                "allowed": {
+                    "message": [
+                        "string"
+                    ]
+                },
+                "generalized": {},
+                "noised": {},
+                "reduced": {}
+            },
+            "purpose2": {
+                "allowed": {},
+                "generalized": {},
+                "noised": {},
+                "reduced": {
+                    "message": [
+                        "string",
+                        "3"
+                    ]
+                }
+            }
+        }
+    }
+}
