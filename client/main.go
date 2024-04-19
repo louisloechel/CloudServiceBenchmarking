@@ -108,7 +108,7 @@ func warmUp(c pb.GreeterClient, concurrentRequests int, config Config) {
 
 	// generate token
 	// GenerateToken(policyPath string, serviceName string, purpose string, keyPath string, expirationInHours time.Duration)
-	badToken, err := jwt.GenerateToken("policy.json", "client", "purpose1", "private_key.pem", 1)
+	badToken, err := jwt.GenerateToken("policy.json", "client", "purpose2", "private_key.pem", 1)
 	// log.Printf("Token: %s", badToken)
 	fmt.Println(badToken)
 	if err != nil {
@@ -122,15 +122,21 @@ func warmUp(c pb.GreeterClient, concurrentRequests int, config Config) {
 			defer wg.Done()
 			defer func() { <-semaphore }() // Release the semaphore
 
+			// Custom auth
+			md := grpcMetadata.Pairs("authorization", badToken)
+
 			start := time.Now()
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+			ctx, cancel := context.WithTimeout(grpcMetadata.NewOutgoingContext(context.Background(), md), time.Second)
 			// Append Metadata w/ Good Client Token
 			ctx = grpcMetadata.AppendToOutgoingContext(ctx, "authorization", badToken)
+
 			defer cancel()
-			_, err := c.SayHello(ctx, &pb.HelloRequest{Name: config.DefaultName})
+			response, err := c.SayHello(ctx, &pb.HelloRequest{Name: config.DefaultName})
 			if err != nil {
 				log.Printf("Could not greet: %v", err)
 				return
+			} else {
+				log.Printf("Response: %v", response)
 			}
 			metricsChan <- Metric{Duration: time.Since(start)}
 		}()
