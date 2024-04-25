@@ -97,15 +97,15 @@ func init() {
 	// Iterate over each record and store the data in the CSVData struct
 	for _, record := range records {
 		timestamp := record[1]
-		chp, err := strconv.ParseFloat(record[2], 32)
+		chp, err := strconv.ParseFloat(record[2], 64)
 		if err != nil {
 			stdlog.Fatalf("failed to parse CHP value: %v", err)
 		}
-		pv, err := strconv.ParseFloat(record[3], 32)
+		pv, err := strconv.ParseFloat(record[3], 64)
 		if err != nil {
 			stdlog.Fatalf("failed to parse PV value: %v", err)
 		}
-		smard, err := strconv.ParseFloat(record[4], 32)
+		smard, err := strconv.ParseFloat(record[4], 64)
 		if err != nil {
 			stdlog.Fatalf("failed to parse SMARD value: %v", err)
 		}
