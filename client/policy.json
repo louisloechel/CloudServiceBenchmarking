@@ -5,6 +5,18 @@
                 "allowed": {
                     "message": [
                         "string"
+                    ],
+                    "timestamp": [
+                        "string"
+                    ],
+                    "production_of_chp": [
+                        "float"
+                    ],
+                    "production_of_pv": [
+                        "float"
+                    ],
+                    "grid_reference_smard": [
+                        "float"
                     ]
                 },
                 "generalized": {},
@@ -12,15 +24,41 @@
                 "reduced": {}
             },
             "purpose2": {
-                "allowed": {},
+                "allowed": {
+                    "grid_reference_smard": [
+                        "float"
+                    ]
+                },
                 "generalized": {},
-                "noised": {},
+                "noised": {
+                    "production_of_chp": [
+                        "float",
+                        "Gaussian"
+                    ],
+                    "production_of_pv": [
+                        "float",
+                        "Gaussian"
+                    ],
+                    "grid_reference_smard": [
+                        "Gaussian"
+                    ]
+                },
                 "reduced": {
                     "message": [
                         "string",
                         "7"
+                    ],
+                    "timestamp": [
+                        "string",
+                        "13"
                     ]
                 }
+            },
+            "purpose3": {
+                "allowed": {},
+                "generalized": {},
+                "noised": {},
+                "reduced": {}
             }
         }
     }
