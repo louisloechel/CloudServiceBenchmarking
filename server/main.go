@@ -7,10 +7,12 @@ package main
 
 import (
 	"context"
+	"encoding/csv"
 	"fmt"
 	stdlog "log"
 	"net"
 	"os"
+	"strconv"
 
 	kitlog "github.com/go-kit/log"
 	"github.com/go-kit/log/level"
@@ -37,6 +39,7 @@ const (
 	component = "grpc-component"
 	port      = "0.0.0.0:50051"
 	keyPath   = "public_key.pem"
+	csvPath   = "2020_inno2grid_all_data_cleaned_and_aligned.csv"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -47,7 +50,74 @@ type server struct {
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
 	// stdlog.Printf("Received: %v", in.GetName())
-	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
+
+	return &pb.HelloReply{
+		Message: "Hello " + in.GetName(),
+		// load the data from the struct
+		Timestamp:          data[in.GetId()].Timestamp,
+		ProductionOfChp:    data[in.GetId()].ProductionOfChp,
+		ProductionOfPv:     data[in.GetId()].ProductionOfPv,
+		GridReferenceSmard: data[in.GetId()].GridReferenceSmard,
+		// Timestamp:          "2020-04-20 04:00:00+00:00",
+		// ProductionOfChp:    10.5,
+		// ProductionOfPv:     1.23,
+		// GridReferenceSmard: 987.67,
+	}, nil
+}
+
+// Map to store csv data in memory (timestmp, chp, pv, smard)
+type CSVData struct {
+	Timestamp          string
+	ProductionOfChp    float32
+	ProductionOfPv     float32
+	GridReferenceSmard float32
+}
+
+var data []CSVData
+
+func init() {
+
+	stdlog.Print("Initializing data from CSV file..")
+	// Read CSV file
+	file, err := os.Open(csvPath)
+	if err != nil {
+		stdlog.Fatalf("failed to open CSV file: %v", err)
+	}
+	defer file.Close()
+	// Create a new CSV reader
+	reader := csv.NewReader(file)
+	// Read all records from the CSV file
+	records, err := reader.ReadAll()
+	if err != nil {
+		stdlog.Fatalf("failed to read CSV records: %v", err)
+	}
+	// remove the first record (header)
+	records = records[1:]
+
+	// Iterate over each record and store the data in the CSVData struct
+	for _, record := range records {
+		timestamp := record[1]
+		chp, err := strconv.ParseFloat(record[2], 32)
+		if err != nil {
+			stdlog.Fatalf("failed to parse CHP value: %v", err)
+		}
+		pv, err := strconv.ParseFloat(record[3], 32)
+		if err != nil {
+			stdlog.Fatalf("failed to parse PV value: %v", err)
+		}
+		smard, err := strconv.ParseFloat(record[4], 32)
+		if err != nil {
+			stdlog.Fatalf("failed to parse SMARD value: %v", err)
+		}
+
+		data = append(data, CSVData{
+			Timestamp:          timestamp,
+			ProductionOfChp:    float32(chp),
+			ProductionOfPv:     float32(pv),
+			GridReferenceSmard: float32(smard),
+		})
+	}
+	stdlog.Print("Initialized data from CSV file..")
 }
 
 // interceptorLogger adapts go-kit logger to interceptor logger.
