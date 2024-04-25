@@ -10,8 +10,17 @@ service Greeter {
   rpc SayHello(HelloRequest) returns (HelloReply) {}
 }
 
-// The request message containing the user's name.
-message HelloRequest { string name = 1; }
+// The request message containing the user's name and id.
+message HelloRequest {
+  string name = 1;
+  int32 id = 2;
+}
 
 // The response message containing the greetings
-message HelloReply { string message = 1; }
+message HelloReply {
+  string message = 1;
+  string timestamp = 2;
+  float production_of_chp = 3;
+  float production_of_pv = 4;
+  float grid_reference_smard = 5;
+}
