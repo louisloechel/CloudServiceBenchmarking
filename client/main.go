@@ -194,7 +194,7 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 				token = badToken
 			}
 
-			// token = goodToken
+			token = goodToken
 
 			// Custom auth
 			md := grpcMetadata.Pairs("authorization", token)
