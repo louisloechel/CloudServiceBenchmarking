@@ -10,7 +10,7 @@
 - [X] GCP setup
 - [X] run Benchmarking Experiments
 - [X] Analyze results
-- [ ] Write report
+- [X] Write report
 
 ## Benchmark Configuration
 📢 **Important:** The benchmarking experiment takes its configuration from this GitHub Repository. Thus, any changes configured via the ```config.yml``` file in the ```client``` & ```server``` directories need to be pushed in order to be applied in the next experiment run.
