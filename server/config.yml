@@ -28,4 +28,4 @@ auth:
   enabled: false
 
 purpl:
-  enabled: true
+  enabled: false
