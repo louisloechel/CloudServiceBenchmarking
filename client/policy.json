@@ -24,7 +24,11 @@
                 "reduced": {}
             },
             "purpose2": {
-                "allowed": {},
+                "allowed": {
+                    "grid_reference_smard": [
+                        "float"
+                    ]
+                },
                 "generalized": {},
                 "noised": {
                     "production_of_chp": [
