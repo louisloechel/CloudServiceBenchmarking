@@ -59,6 +59,80 @@
                 "generalized": {},
                 "noised": {},
                 "reduced": {}
+            },
+            "purpose4": {
+                "allowed": {},
+                "generalized": {
+                    "message": [
+                        "string"
+                    ],
+                    "timestamp": [
+                        "string"
+                    ],
+                    "production_of_chp": [
+                        "float"
+                    ],
+                    "production_of_pv": [
+                        "float"
+                    ],
+                    "grid_reference_smard": [
+                        "float"
+                    ]
+                },
+                "noised": {},
+                "reduced": {}
+            },
+            "purpose5": {
+                "allowed": {},
+                "generalized": {},
+                "noised": {
+                    "message": [
+                        "string"
+                    ],
+                    "timestamp": [
+                        "string"
+                    ],
+                    "production_of_chp": [
+                        "float",
+                        "Gaussian"
+                    ],
+                    "production_of_pv": [
+                        "float",
+                        "Gaussian"
+                    ],
+                    "grid_reference_smard": [
+                        "float",
+                        "Gaussian"
+                    ]
+                },
+                "reduced": {}
+            },
+            "purpose6": {
+                "allowed": {},
+                "generalized": {},
+                "noised": {},
+                "reduced": {
+                    "message": [
+                        "string",
+                        "7"
+                    ],
+                    "timestamp": [
+                        "string",
+                        "13"
+                    ],
+                    "production_of_chp": [
+                        "float",
+                        "10"
+                    ],
+                    "production_of_pv": [
+                        "float",
+                        "10"
+                    ],
+                    "grid_reference_smard": [
+                        "float",
+                        "10"
+                    ]
+                }
             }
         }
     }
