@@ -170,6 +170,22 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 		log.Fatalf("Error on generating token: %v", err)
 	}
 
+	// three different mixed-tokens used to compare each anononymization technique's performance
+	generalizedToken, err := jwt.GenerateToken("policy.json", "client", "purpose4", "private_key.pem", 1)
+	if err != nil {
+		log.Fatalf("Error on generating token: %v", err)
+	}
+
+	noisedToken, err := jwt.GenerateToken("policy.json", "client", "purpose5", "private_key.pem", 1)
+	if err != nil {
+		log.Fatalf("Error on generating token: %v", err)
+	}
+
+	reducedToken, err := jwt.GenerateToken("policy.json", "client", "purpose6", "private_key.pem", 1)
+	if err != nil {
+		log.Fatalf("Error on generating token: %v", err)
+	}
+
 	// log.Printf("Token: %s", token)
 	// fmt.Println(token)
 	if err != nil {
@@ -194,7 +210,9 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 				token = badToken
 			}
 
-			// token = mixedToken
+			// Deactivate random token selection
+			// Options: generalizedToken, noisedToken, reducedToken, mixedToken, goodToken, badToken (see above)
+			token = generalizedToken
 
 			// Custom auth
 			md := grpcMetadata.Pairs("authorization", token)
