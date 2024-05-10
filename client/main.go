@@ -201,13 +201,19 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 
 			// Randomly select token
 			var token string
-			switch rand.Intn(3) {
+			switch rand.Intn(6) {
 			case 0:
 				token = goodToken
 			case 1:
 				token = mixedToken
 			case 2:
 				token = badToken
+			case 3:
+				token = generalizedToken
+			case 4:
+				token = noisedToken
+			case 5:
+				token = reducedToken
 			}
 
 			// Deactivate random token selection
