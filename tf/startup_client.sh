@@ -31,6 +31,9 @@ sudo sed -i "s/server_address:.*/server_address: $SERVER_IP/" client/config.yml
 # Ping the server-vm to make sure it's running
 while ! ping -c 1 $SERVER_IP; do sleep 1; done
 
+# wait a bit to make sure the server microservice is ready
+sleep 30
+
 # Start a new subshell with the new group
 newgrp docker << EOF
 
