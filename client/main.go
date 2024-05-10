@@ -211,7 +211,7 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 			case 3:
 				token = generalizedToken
 			case 4:
-				token = noisedToken
+				token = noisedToken // broken
 			case 5:
 				token = reducedToken
 			}

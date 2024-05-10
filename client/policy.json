@@ -64,19 +64,24 @@
                 "allowed": {},
                 "generalized": {
                     "message": [
-                        "string"
+                        "string",
+                        "2"
                     ],
                     "timestamp": [
-                        "string"
+                        "string",
+                        "2"
                     ],
                     "production_of_chp": [
-                        "float"
+                        "float",
+                        "10"
                     ],
                     "production_of_pv": [
-                        "float"
+                        "float",
+                        "10"
                     ],
                     "grid_reference_smard": [
-                        "float"
+                        "float",
+                        "10"
                     ]
                 },
                 "noised": {},
@@ -87,10 +92,12 @@
                 "generalized": {},
                 "noised": {
                     "message": [
-                        "string"
+                        "string",
+                        "Gaussian"
                     ],
                     "timestamp": [
-                        "string"
+                        "string",
+                        "Gaussian"
                     ],
                     "production_of_chp": [
                         "float",
