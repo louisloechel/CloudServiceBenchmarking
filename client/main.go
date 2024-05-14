@@ -218,7 +218,7 @@ func runBenchmark(c pb.GreeterClient, concurrentRequests int, config Config) {
 
 			// Deactivate random token selection
 			// Options: generalizedToken, noisedToken, reducedToken, mixedToken, goodToken, badToken (see above)
-			token = generalizedToken
+			token = noisedToken
 
 			// Custom auth
 			md := grpcMetadata.Pairs("authorization", token)
